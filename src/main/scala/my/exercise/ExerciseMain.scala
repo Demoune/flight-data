@@ -1,5 +1,7 @@
 package my.exercise
 
+import my.exercise.util.SparkSupport
+
 /*
 Main application class, to be specified for spark-submit
  */

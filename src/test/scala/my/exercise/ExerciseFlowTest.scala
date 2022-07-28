@@ -1,7 +1,7 @@
 package my.exercise
 
 import my.exercise.config.AppConfig.mainConfig
-import my.exercise.utils.TestUtils
+import my.exercise.utils.{SparkTestSupport, TestUtils}
 import org.scalatest.BeforeAndAfter
 import org.scalatest.funspec.AnyFunSpec
 
@@ -13,7 +13,7 @@ class ExerciseFlowTest extends AnyFunSpec with SparkTestSupport with BeforeAndAf
   before {
     val rootFolder = new File(mainConfig.output.basePath)
     if (rootFolder.exists()) {
-      TestUtils.remove(Paths.get(mainConfig.output.basePath), true)
+      TestUtils.remove(Paths.get(mainConfig.output.basePath))
     }
   }
 
@@ -23,23 +23,15 @@ class ExerciseFlowTest extends AnyFunSpec with SparkTestSupport with BeforeAndAf
       exerciseFlow.run()
 
       val csvReader = new CsvDataReader(spark)
-      val flownTogetherDf = csvReader.read(mainConfig.output.basePath + "/" + "flown-together-min3/*.csv" )
-      val longestRunDf = csvReader.read(mainConfig.output.basePath + "/" + "longest-run-without-uk/*.csv" )
-      val monthlyFlightsDf = csvReader.read(mainConfig.output.basePath + "/" + "monthly-flights/*.csv" )
-      val top100FlyersDf = csvReader.read(mainConfig.output.basePath + "/" + "top-100-flyers/*.csv" )
+      val flownTogetherDf = csvReader.read(mainConfig.output.basePath + "/" + "flown-together-min3" )
+      val longestRunDf = csvReader.read(mainConfig.output.basePath + "/" + "longest-run-without-uk" )
+      val monthlyFlightsDf = csvReader.read(mainConfig.output.basePath + "/" + "monthly-flights" )
+      val top100FlyersDf = csvReader.read(mainConfig.output.basePath + "/" + "top-100-flyers" )
 
-      it("monthlyFlightsDf should contain 12 records") {
-        assertResult(12)(monthlyFlightsDf.count())
-      }
-      it("top100FlyersDf should contain 100 records") {
-        assertResult(100)(top100FlyersDf.count())
-      }
-      it("flownTogetherDf should contain 222 records") {
-        assertResult(222)(flownTogetherDf.count())
-      }
-      it("longestRunDf should contain 444 records") {
-        assertResult(444)(longestRunDf.count())
-      }
+        assertResult(12)(monthlyFlightsDf.count()) // 1 year data
+        assertResult(100)(top100FlyersDf.count()) // top 100
+        assertResult(358715)(flownTogetherDf.count()) // combination
+        assertResult(15500)(longestRunDf.count())  //the same as number of passengers, one stat per passenger
     }
   }
 

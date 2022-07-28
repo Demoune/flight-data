@@ -1,6 +1,7 @@
 package my.exercise
 
 import my.exercise.config.AppConfig.mainConfig
+import my.exercise.utils.SparkTestSupport
 import org.apache.spark.sql.functions.{col, lit}
 import org.scalatest.funspec.AnyFunSpec
 
@@ -9,7 +10,7 @@ import java.time.LocalDate
 class FlightDataCalcTest extends AnyFunSpec with SparkTestSupport {
 
 
-  val csvReader = new CsvDataReader()(spark)
+  val csvReader = new CsvDataReader(spark)
   val flightsDf = csvReader.read(mainConfig.input.flightDataFile)
   val passengerDf = csvReader.read(mainConfig.input.passengerDataFile)
 
@@ -60,26 +61,7 @@ class FlightDataCalcTest extends AnyFunSpec with SparkTestSupport {
   describe("FlightDataCalc for monthlyFlights") {
     it("should return flownTogether for 3 flights dataFrame for the whole date range available") {
 
-
-      /*
-            //For test data preparation only
-            flightData.flightsDf
-              .filter(col("passengerId").equalTo("210")
-                .or(col("passengerId").equalTo("271")))
-              .show(40, false)
-            flightData.flightsDf
-              .filter(col("passengerId").equalTo("2")
-                .or(col("passengerId").equalTo("3")))
-              .show(40, false)
-      */
-
-
-      val result = flightData.flownTogether(
-        3,
-        None,
-        None
-      )
-
+      val result = flightData.flownTogether(        3, None, None)
 
       //expecting 3 common flights for passengers with Ids 210 and 271
       assertResult(3)(
@@ -104,13 +86,6 @@ class FlightDataCalcTest extends AnyFunSpec with SparkTestSupport {
 
     it("should return flownTogether for the date range and 2 minimum Flights as expected") {
 
-      /*
-                  //For test data preparation only
-                  flightData.flightsDf
-                    .filter(col("passengerId").equalTo("210")
-                      .or(col("passengerId").equalTo("271")))
-                    .show(40, false)
-      */
 
       val result = flightData.flownTogether(
         2,
