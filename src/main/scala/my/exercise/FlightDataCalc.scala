@@ -74,6 +74,7 @@ class FlightDataCalc(val flightsDf: DataFrame, passengersDf: DataFrame) {
 
     groupCounts2.groupBy("passengerId").agg(functions.max("runLength").as("Longest Run"))
       .withColumnRenamed("passengerId", "Passenger ID")
+      .orderBy(desc("Longest Run"))
   }
 
   /**
@@ -112,7 +113,7 @@ class FlightDataCalc(val flightsDf: DataFrame, passengersDf: DataFrame) {
       .groupBy("Passenger1Id", "Passenger2Id")
       .agg(count(col("flightId")).as("Number of flights together"))
       .where(col("Number of flights together").gt(lit(atLeastNTimes - 1))) // filtering < 3 flights together
-    //.orderBy(desc("Number of flights together"))
+      .orderBy(desc("Number of flights together"))
 
   }
 
