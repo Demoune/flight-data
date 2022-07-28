@@ -4,6 +4,8 @@ import my.exercise.config.AppConfig.mainConfig
 import org.apache.spark.sql.functions.{col, lit}
 import org.scalatest.funspec.AnyFunSpec
 
+import java.time.LocalDate
+
 class FlightDataTest extends AnyFunSpec with SparkTestSupport {
 
 
@@ -16,7 +18,7 @@ class FlightDataTest extends AnyFunSpec with SparkTestSupport {
     val flightData: FlightData = FlightData(flightsDf, passengerDf)
 
     it("should output flight data") {
-      flightData.flightsDf.where("passengerId == '382'").show(100,false)
+      flightData.flightsDf.where("passengerId == '382'").show(100, false)
 
     }
 
@@ -24,7 +26,7 @@ class FlightDataTest extends AnyFunSpec with SparkTestSupport {
       val result = flightData.monthlyFlights()
       val count = result.count
 
-      assertResult(343)(count)  //validating total count
+      assertResult(343)(count) //validating total count
       assertResult(200)(result.where("date == '2017-08-03'").select("count").head()(0))
       result.show(false)
     }
@@ -48,11 +50,15 @@ class FlightDataTest extends AnyFunSpec with SparkTestSupport {
     }
 
     it("should return flownTogether for 3 flights dataFrame as expected") {
+      val result = flightData.flownTogether(
+        3,
+        java.sql.Date.valueOf(LocalDate.parse("2017-01-01")),
+        java.sql.Date.valueOf(LocalDate.parse("2017-07-01")))
 
+      result.show(false)
 
 
     }
-
 
 
   }

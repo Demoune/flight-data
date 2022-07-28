@@ -6,7 +6,7 @@ import org.apache.spark.sql.expressions.Window
 import org.apache.spark.sql.functions.{array_remove, array_union, broadcast, col, collect_list, collect_set, count, desc, expr, lag, last, lit, row_number, when}
 import org.apache.spark.sql.sources.Not
 
-import java.util.Date
+import java.sql.Date
 
 class FlightData(val flightsDf: DataFrame, passengersDf: DataFrame) {
 
@@ -41,27 +41,50 @@ class FlightData(val flightsDf: DataFrame, passengersDf: DataFrame) {
 
     //    val groupCounts = runGroups
     //        .groupBy("passengerId", "run_num").agg(count("*").as("Run Length"))
-//    val groupCounts = runGroups.groupBy("passengerId", "run_num")
-//      .agg(functions.size(array_remove(collect_set("from"), "uk")).as("runLength"))
+    //    val groupCounts = runGroups.groupBy("passengerId", "run_num")
+    //      .agg(functions.size(array_remove(collect_set("from"), "uk")).as("runLength"))
 
     val groupCounts = runGroups.groupBy("passengerId", "run_num")
-      .agg(array_remove(array_union(collect_set("from"), collect_set("to")) , "uk").as("temp1"))
+      .agg(array_remove(array_union(collect_set("from"), collect_set("to")), "uk").as("temp1"))
 
-//    groupCounts.show(false)
-//    groupCounts.where(col("passengerId").equalTo(lit("382"))).show(false)
+    //    groupCounts.show(false)
+    //    groupCounts.where(col("passengerId").equalTo(lit("382"))).show(false)
 
     val groupCounts2 = groupCounts.withColumn("runLength", functions.size(col("temp1")))
 
     //debug
-//    groupCounts.show(false)
-//    groupCounts2.where(col("passengerId").equalTo(lit("382"))).show(false)
+    //    groupCounts.show(false)
+    //    groupCounts2.where(col("passengerId").equalTo(lit("382"))).show(false)
 
     groupCounts2.groupBy("passengerId").agg(functions.max("runLength").as("Longest Run"))
-          .withColumnRenamed("passengerId", "Passenger ID")
+      .withColumnRenamed("passengerId", "Passenger ID")
   }
 
   def flownTogether(atLeastNTimes: Int, from: Date, to: Date): DataFrame = {
-    ???
+
+    var currentDf = flightsDf
+      .filter(s"to_date(date) >= $from")
+      .where(s"to_date(date) <= $to")
+
+    println(flightsDf.schema.prettyJson)
+
+    currentDf.show(false)
+
+    currentDf.as("a")
+      .join(currentDf.as("b"),
+        col("a.flightId") === col("b.flightId") and
+        col("a.passengerId") =!= col("b.passengerId") and
+        col("a.passengerId") < col("b.passengerId")
+      )
+      .select(
+        col("a.passengerId").as("Passenger1Id"),
+        col("b.passengerId").as("Passenger2Id"),
+        col("a.flightId")
+      ).groupBy("Passenger1Id", "Passenger2Id")
+      .agg(count(col("flightId")).as("Number of flights together"))
+      .where(col("Number of flights together").gt(lit(atLeastNTimes)))
+      //.orderBy(desc("Number of flights together"))
+
   }
 
 }
